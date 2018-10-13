@@ -23,7 +23,7 @@ func Test_Demo(t *testing.T) {
 		SkipVerifySign: true,
 		//...
 	})
-
+    client.skipVerifySignature = false
 	response, err := client.APIFunc1(APIFunc1Request{
 		Field1: "value1",
 		Field2: "value2",
