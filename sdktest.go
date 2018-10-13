@@ -80,7 +80,7 @@ func (st *SDKTester) getFieldMap(i interface{}) map[string]interface{} {
 	im := map[string]interface{}{}
 	val := reflect.ValueOf(i).Elem()
 	for i := 0; i < val.NumField(); i++ {
-		// 这里只做一层，如果想做n层需要改成可迭代方法
+		// anonymous embed struct as first level
 		if val.Type().Field(i).Anonymous && val.Type().Field(i).Type.Kind() == reflect.Struct {
 			ii := val.Field(i)
 			for j := 0; j < ii.NumField(); j++ {
@@ -99,6 +99,8 @@ func (st *SDKTester) getFieldMap(i interface{}) map[string]interface{} {
 
 }
 
+// CehckResponse check response struct is or not equal want's data
+// resp struct pointer
 func (st *SDKTester) CheckResponse(resp interface{}, want map[string]interface{}) {
 	respMap := st.getFieldMap(resp)
 
