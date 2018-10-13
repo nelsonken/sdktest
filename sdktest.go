@@ -5,10 +5,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/clbanning/x2j"
-	"github.com/fatih/structs"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -76,19 +76,43 @@ func (st *SDKTester) checkRequest(req *http.Request, want map[string]interface{}
 	}
 }
 
-func (st *SDKTester) CheckResponse(resp interface{}, want map[string]interface{}) {
-	respMap := structs.Map(resp)
+func (st *SDKTester) getFieldMap(i interface{}) map[string]interface{} {
+	im := map[string]interface{}{}
+	val := reflect.ValueOf(i).Elem()
+	for i := 0; i < val.NumField(); i++ {
+		// 这里只做一层，如果想做n层需要改成可迭代方法
+		if val.Type().Field(i).Anonymous && val.Type().Field(i).Type.Kind() == reflect.Struct {
+			ii := val.Field(i)
+			for j := 0; j < ii.NumField(); j++ {
 
-	if len(respMap) == 0 {
-		st.t.Errorf("convert resp to map failed")
-		return
+				key := val.Type().Field(i).Type.Field(j).Name
+				im[key] = val.Field(i).Field(j).Interface()
+			}
+			continue
+		}
+
+		key := val.Type().Field(i).Name
+		im[key] = val.Field(i).Interface()
 	}
+
+	return im
+
+}
+
+func (st *SDKTester) CheckResponse(resp interface{}, want map[string]interface{}) {
+	respMap := st.getFieldMap(resp)
 
 	for i, v := range want {
 		switch x := respMap[i].(type) {
 		case Stringer:
 			if !assert.Equal(st.t, v, x.String()) {
 				st.t.Errorf("%s want %v, got %v", i, v, respMap[i])
+			}
+		case map[string]interface{}:
+			if value, ok := x["Value"]; ok {
+				if !assert.Equal(st.t, v, value) {
+					st.t.Errorf("%s want %v, got %v", i, v, respMap[i])
+				}
 			}
 		case Inter:
 			if !assert.Equal(st.t, v, x.Int()) {
