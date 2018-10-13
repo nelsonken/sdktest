@@ -96,7 +96,6 @@ func (st *SDKTester) getFieldMap(i interface{}) map[string]interface{} {
 	}
 
 	return im
-
 }
 
 // CehckResponse check response struct is or not equal want's data
