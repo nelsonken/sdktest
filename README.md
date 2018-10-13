@@ -35,7 +35,7 @@ func Test_Demo(t *testing.T) {
 	}
 
 	respWant := map[string]interface{}{
-		"Code": "ok", // Field name of struct not tag
+		"Code": "ok", // Field name of struct filed, not tag name
 	}
 
 	st.CheckResponse(response, respWant)
