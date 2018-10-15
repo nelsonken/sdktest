@@ -124,6 +124,9 @@ func (st *SDKTester) getFieldMap(i interface{}) map[string]interface{} {
 func (st *SDKTester) Test(resp interface{}) {
 	respMap := st.getFieldMap(resp)
 	for i, v := range st.respWant {
+		if reflect.DeepEqual(v, respMap[i]) {
+			continue
+		}
 		switch x := respMap[i].(type) {
 		case Stringer:
 			if !assert.Equal(st.t, v, x.String()) {
