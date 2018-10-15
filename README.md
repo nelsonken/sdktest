@@ -9,7 +9,6 @@ import (
 )
 
 func Test_Demo(t *testing.T) {
-	st := NewSDKTester(t, "xml")
 	respData := []byte(`<xml><code>ok</code></xml>`)
 
 	reqWant := map[string]interface{}{
@@ -17,13 +16,26 @@ func Test_Demo(t *testing.T) {
 		"field2": "value2",
 	}
 
-	st.HandleHTTP("/uri", respData, reqWant)
+	respWant := map[string]interface{}{
+		"Code": "ok", // Field name of struct filed, not tag name
+	}
+
+    st := sdktest.NewSDKTester(t, sdktest.Options{
+         RespType: "xml",
+         XMLRoot:  "xml",
+         RespData: respData,
+         RespWant: respWant,
+         ReqWant:  reqWant,
+         URI:      "/pay/prepay",
+     })
+
 	client := NewClient(Option{
 		BaseURL:        st.URL(),
 		SkipVerifySign: true,
 		//...
 	})
     client.skipVerifySignature = false
+
 	response, err := client.APIFunc1(APIFunc1Request{
 		Field1: "value1",
 		Field2: "value2",
@@ -34,10 +46,6 @@ func Test_Demo(t *testing.T) {
 		return
 	}
 
-	respWant := map[string]interface{}{
-		"Code": "ok", // Field name of struct filed, not tag name
-	}
-
-	st.CheckResponse(response, respWant)
+	st.Test(response)
 }
 ```

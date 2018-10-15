@@ -17,6 +17,17 @@ type SDKTester struct {
 	server   *httptest.Server
 	respType string
 	t        *testing.T
+	xmlRoot  string
+	respWant map[string]interface{}
+}
+
+type Options struct {
+	RespType string
+	XMLRoot  string
+	RespData []byte
+	RespWant map[string]interface{}
+	ReqWant  map[string]interface{}
+	URI      string
 }
 
 type Stringer interface {
@@ -27,17 +38,22 @@ type Inter interface {
 	Int() int
 }
 
-func NewSDKTester(t *testing.T, respType string) *SDKTester {
+func NewSDKTester(t *testing.T, o Options) *SDKTester {
 	mux := http.NewServeMux()
 
 	server := httptest.NewServer(mux)
 
-	return &SDKTester{
+	st := &SDKTester{
 		mux:      mux,
 		server:   server,
-		respType: respType,
+		respType: o.RespType,
 		t:        t,
+		xmlRoot:  o.XMLRoot,
+		respWant: o.RespWant,
 	}
+
+	st.HandleHTTP(o.URI, o.RespData, o.ReqWant)
+	return st
 }
 
 func (st *SDKTester) checkRequest(req *http.Request, want map[string]interface{}) {
@@ -61,7 +77,7 @@ func (st *SDKTester) checkRequest(req *http.Request, want map[string]interface{}
 			return
 		}
 
-		reqMap = reqMap["xml"].(map[string]interface{})
+		reqMap = reqMap[st.xmlRoot].(map[string]interface{})
 	}
 
 	if len(reqMap) == 0 {
@@ -96,14 +112,14 @@ func (st *SDKTester) getFieldMap(i interface{}) map[string]interface{} {
 	}
 
 	return im
+
 }
 
 // CehckResponse check response struct is or not equal want's data
 // resp struct pointer
-func (st *SDKTester) CheckResponse(resp interface{}, want map[string]interface{}) {
+func (st *SDKTester) Test(resp interface{}) {
 	respMap := st.getFieldMap(resp)
-
-	for i, v := range want {
+	for i, v := range st.respWant {
 		switch x := respMap[i].(type) {
 		case Stringer:
 			if !assert.Equal(st.t, v, x.String()) {
