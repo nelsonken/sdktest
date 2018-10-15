@@ -122,6 +122,7 @@ func (st *SDKTester) getFieldMap(i interface{}) map[string]interface{} {
 // CehckResponse check response struct is or not equal want's data
 // resp struct pointer
 func (st *SDKTester) Test(resp interface{}) {
+	defer st.close()
 	respMap := st.getFieldMap(resp)
 	for i, v := range st.respWant {
 		if reflect.DeepEqual(v, respMap[i]) {
@@ -148,7 +149,6 @@ func (st *SDKTester) Test(resp interface{}) {
 			}
 		}
 	}
-	st.Close()
 }
 
 func (st *SDKTester) handleHTTP(uri string, resp []byte, reqWant map[string]interface{}) {
@@ -159,7 +159,7 @@ func (st *SDKTester) handleHTTP(uri string, resp []byte, reqWant map[string]inte
 	})
 }
 
-func (st *SDKTester) Close() {
+func (st *SDKTester) close() {
 	st.server.Close()
 }
 
