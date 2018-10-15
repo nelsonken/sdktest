@@ -1,6 +1,5 @@
 # sdktest
 golang http api sdk test tool
-> a train of thought
 
 # Demo
 ``` go
@@ -26,7 +25,7 @@ func Test_Demo(t *testing.T) {
          RespData: respData,
          RespWant: respWant,
          ReqWant:  reqWant,
-         URI:      "/pay/prepay",
+         URI:      "/uri/to/resource",
      })
 
 	client := NewClient(Option{
@@ -39,6 +38,7 @@ func Test_Demo(t *testing.T) {
 	response, err := client.APIFunc1(APIFunc1Request{
 		Field1: "value1",
 		Field2: "value2",
+        Field2: &SomeStruct{ Field1: "value3"},
 	})
 
 	if err != nil {
