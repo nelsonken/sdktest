@@ -52,7 +52,7 @@ func NewSDKTester(t *testing.T, o Options) *SDKTester {
 		respWant: o.RespWant,
 	}
 
-	st.HandleHTTP(o.URI, o.RespData, o.ReqWant)
+	st.handleHTTP(o.URI, o.RespData, o.ReqWant)
 	return st
 }
 
@@ -141,9 +141,10 @@ func (st *SDKTester) Test(resp interface{}) {
 			}
 		}
 	}
+	st.Close()
 }
 
-func (st *SDKTester) HandleHTTP(uri string, resp []byte, reqWant map[string]interface{}) {
+func (st *SDKTester) handleHTTP(uri string, resp []byte, reqWant map[string]interface{}) {
 	st.mux.HandleFunc(uri, func(w http.ResponseWriter, r *http.Request) {
 		st.checkRequest(r, reqWant)
 		w.Write(resp)
