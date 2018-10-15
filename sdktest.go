@@ -52,7 +52,12 @@ func NewSDKTester(t *testing.T, o Options) *SDKTester {
 		respWant: o.RespWant,
 	}
 
+	if st.xmlRoot == "" {
+		st.xmlRoot = "xml"
+	}
+
 	st.handleHTTP(o.URI, o.RespData, o.ReqWant)
+
 	return st
 }
 
@@ -112,7 +117,6 @@ func (st *SDKTester) getFieldMap(i interface{}) map[string]interface{} {
 	}
 
 	return im
-
 }
 
 // CehckResponse check response struct is or not equal want's data
