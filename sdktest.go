@@ -62,6 +62,11 @@ func NewSDKTester(t *testing.T, o Options) *SDKTester {
 }
 
 func (st *SDKTester) checkRequest(req *http.Request, want map[string]interface{}) {
+	if want == nil || req == nil {
+		st.t.Logf("request want/got is nil, abort\n")
+		return
+	}
+
 	reqMap := map[string]interface{}{}
 
 	if st.respType == "json" {
@@ -122,7 +127,11 @@ func (st *SDKTester) getFieldMap(i interface{}) map[string]interface{} {
 // CehckResponse check response struct is or not equal want's data
 // resp struct pointer
 func (st *SDKTester) Test(resp interface{}) {
-	defer st.close()
+	if resp == nil || st.respWant == nil {
+		st.t.Logf("response want/got is nil, abort\n")
+		return
+	}
+
 	respMap := st.getFieldMap(resp)
 	for i, v := range st.respWant {
 		if reflect.DeepEqual(v, respMap[i]) {
@@ -159,7 +168,7 @@ func (st *SDKTester) handleHTTP(uri string, resp []byte, reqWant map[string]inte
 	})
 }
 
-func (st *SDKTester) close() {
+func (st *SDKTester) Close() {
 	st.server.Close()
 }
 
