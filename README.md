@@ -19,26 +19,27 @@ func Test_Demo(t *testing.T) {
 		"Code": "ok", // Field name of struct filed, not tag name
 	}
 
-    st := sdktest.NewSDKTester(t, sdktest.Options{
-         RespType: "xml",
-         XMLRoot:  "xml",
-         RespData: respData,
-         RespWant: respWant,
-         ReqWant:  reqWant,
-         URI:      "/uri/to/resource",
-     })
+        st := sdktest.NewSDKTester(t, sdktest.Options{
+               RespType: "xml",
+               XMLRoot:  "xml",
+               RespData: respData,
+               RespWant: respWant,
+               ReqWant:  reqWant,
+               URI:      "/uri/to/resource",
+        })
 
 	client := NewClient(Option{
 		BaseURL:        st.URL(),
 		SkipVerifySign: true,
 		//...
 	})
-    client.skipVerifySignature = false
+	
+        client.skipVerifySignature = false
 
 	response, err := client.APIFunc1(APIFunc1Request{
 		Field1: "value1",
 		Field2: "value2",
-        Field2: &SomeStruct{ Field1: "value3"},
+        	Field3: &SomeStruct{ Field1: "value3"},
 	})
 
 	if err != nil {
