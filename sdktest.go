@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"testing"
 
@@ -13,21 +14,23 @@ import (
 )
 
 type SDKTester struct {
-	mux      *http.ServeMux
-	server   *httptest.Server
-	respType string
-	t        *testing.T
-	xmlRoot  string
-	respWant map[string]interface{}
+	mux       *http.ServeMux
+	server    *httptest.Server
+	respType  string
+	t         *testing.T
+	xmlRoot   string
+	respWant  map[string]interface{}
+	dataField string
 }
 
 type Options struct {
-	RespType string
-	XMLRoot  string
-	RespData []byte
-	RespWant map[string]interface{}
-	ReqWant  map[string]interface{}
-	URI      string
+	RespType  string
+	XMLRoot   string
+	DataField string
+	RespData  []byte
+	RespWant  map[string]interface{}
+	ReqWant   map[string]interface{}
+	URI       string
 }
 
 type Stringer interface {
@@ -44,12 +47,13 @@ func NewSDKTester(t *testing.T, o Options) *SDKTester {
 	server := httptest.NewServer(mux)
 
 	st := &SDKTester{
-		mux:      mux,
-		server:   server,
-		respType: o.RespType,
-		t:        t,
-		xmlRoot:  o.XMLRoot,
-		respWant: o.RespWant,
+		mux:       mux,
+		server:    server,
+		respType:  o.RespType,
+		t:         t,
+		xmlRoot:   o.XMLRoot,
+		respWant:  o.RespWant,
+		dataField: o.DataField,
 	}
 
 	if st.xmlRoot == "" {
@@ -69,16 +73,15 @@ func (st *SDKTester) checkRequest(req *http.Request, want map[string]interface{}
 
 	reqMap := map[string]interface{}{}
 
-	if st.respType == "json" {
+	switch st.respType {
+	case "json":
 		jd := json.NewDecoder(req.Body)
 		err := jd.Decode(&reqMap)
 		if err != nil {
 			st.t.Errorf("unmarshal request failed %v", err)
 			return
 		}
-	}
-
-	if st.respType == "xml" {
+	case "xml":
 		data, _ := ioutil.ReadAll(req.Body)
 
 		err := x2j.Unmarshal(data, &reqMap)
@@ -88,10 +91,32 @@ func (st *SDKTester) checkRequest(req *http.Request, want map[string]interface{}
 		}
 
 		reqMap = reqMap[st.xmlRoot].(map[string]interface{})
+	case "formXML":
+		data, _ := ioutil.ReadAll(req.Body)
+		values, err := url.ParseQuery(data)
+		if err != nil {
+			st.t.Errorf("parse query failed %v", err)
+			return
+		}
+		reqData := []byte(values.Get(st.dataField))
+		err = x2j.Unmarshal(reqData, &reqMap)
+		if err != nil {
+			st.t.Errorf("unmarshal request failed %v", err)
+			return
+		}
+
+		reqMap = reqMap[st.xmlRoot].(map[string]interface{})
+	case "queryJSON": // alipay
+		reqData := req.URL.Query().Get(st.dataField)
+		err := json.Unmarshal([]byte(reqData), &reqMap)
+		if err != nil {
+			st.t.Errorf("unmarshal request failed %v", err)
+			return
+		}
 	}
 
 	if len(reqMap) == 0 {
-		st.t.Errorf("unmarshal request failed")
+		st.t.Errorf("unmarshal request failed\n")
 		return
 	}
 
