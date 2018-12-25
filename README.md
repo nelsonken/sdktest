@@ -1,5 +1,13 @@
 # sdktest
-golang http api sdk test tool
+> golang http api sdk test tool
+
+Support:
+[x] JSON
+[x] XML
+[x] Query string 
+[x] Form Data
+[x] Form Body contain XML
+[x] Query string contain JSON
 
 # Demo
 ``` go
