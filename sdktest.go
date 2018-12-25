@@ -74,6 +74,20 @@ func (st *SDKTester) checkRequest(req *http.Request, want map[string]interface{}
 	reqMap := map[string]interface{}{}
 
 	switch st.respType {
+	case "query":
+		reqData := req.URL.Query()
+		for k, v := range reqData {
+			reqMap[k] = v[0]
+		}
+	case "form":
+		err := req.ParseForm()
+		if err != nil {
+			st.t.Errorf("unmarshal request failed %v", err)
+			return
+		}
+		for k, v := range req.Form {
+			reqMap[k] = v[0]
+		}
 	case "json":
 		jd := json.NewDecoder(req.Body)
 		err := jd.Decode(&reqMap)
@@ -93,7 +107,7 @@ func (st *SDKTester) checkRequest(req *http.Request, want map[string]interface{}
 		reqMap = reqMap[st.xmlRoot].(map[string]interface{})
 	case "formXML":
 		data, _ := ioutil.ReadAll(req.Body)
-		values, err := url.ParseQuery(data)
+		values, err := url.ParseQuery(string(data))
 		if err != nil {
 			st.t.Errorf("parse query failed %v", err)
 			return
